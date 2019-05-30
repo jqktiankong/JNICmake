@@ -25,59 +25,53 @@ Java_com_example_jnicmake_NDKTools_scanDir(
         jstring dir1,
         jint depth
 ) {
-//    DIR *p_dir = NULL;
-//    struct dirent *p_entry = NULL;
-//    struct stat statbuf;
-//
-//    if ((p_dir = opendir(env->GetStringUTFChars(dir, 0))) == NULL) {
-//        return;
-//    }
-//
-//    chdir(env->GetStringUTFChars(dir, 0));
-//
-//    while (NULL != (p_entry = readdir(p_dir))) { // 获取下一级目录信息
-//
-//        lstat(p_entry->d_name, &statbuf); // 获取下一级成员属性
-//
-//        if (S_IFDIR & statbuf.st_mode) { // 判断下一级成员是否是目录  
-//            if (strcmp(".", p_entry->d_name) == 0 || strcmp("..", p_entry->d_name) == 0)
-//                continue;
-//
-//            LOGD("%*s%s/\n", depth, "目录", p_entry->d_name);
-//            Java_com_example_jnicmake_NDKTools_scanDir(env, jclass1, env->NewStringUTF(p_entry->d_name), depth + 4); // 扫描下一级目录的内容
-//        } else {
-//            LOGD("%*s%s\n", depth, "文件", p_entry->d_name); // 输出属性不是目录的成员
-//        }
-//    }
-//    chdir(".."); // 回到上级目录  
-//    closedir(p_dir);
 
     DIR *dir;
     struct dirent *ptr;
     char base[1000];
 
-    if ((dir = opendir(env->GetStringUTFChars(dir1, 0))) == NULL) {
-        perror("Open dir error...");
+    const char *path = env->GetStringUTFChars(dir1, 0);
+
+    dir = opendir(path);
+    if (dir == NULL) {
+        LOGE("Open dir error...");
     } else {
+
         while ((ptr = readdir(dir)) != NULL) {
             if (strcmp(ptr->d_name, ".") == 0 ||
                 strcmp(ptr->d_name, "..") == 0)    ///current dir OR parrent dir
                 continue;
-            else if (ptr->d_type == 8)    ///file
-                LOGE("d_name:%s/%s\n", env->GetStringUTFChars(dir1, 0), ptr->d_name);
-            else if (ptr->d_type == 10)    ///link file
-                LOGE("d_name:%s/%s\n", env->GetStringUTFChars(dir1, 0), ptr->d_name);
-            else if (ptr->d_type == 4)    ///dir
-            {
+            else if (ptr->d_type == 8) {   ///file
+
+                if (strstr(ptr->d_name, ".rc")) {
+                    //判断是不是txt文件
+//                    LOGE("%s/%s\n", "文件", ptr->d_name);
+                }
+                LOGE("%s/%s\n", "文件", ptr->d_name);
+            } else if (ptr->d_type == 10) {
+                ///link file
+//                LOGE("%s/%s\n", "link文件", ptr->d_name);
+            } else if (ptr->d_type == 4) {   //dir
+//                LOGE("%s/%s\n", "文件夹", ptr->d_name);
                 memset(base, '\0', sizeof(base));
                 strcpy(base, env->GetStringUTFChars(dir1, 0));
                 strcat(base, "/");
                 strcat(base, ptr->d_name);
-                Java_com_example_jnicmake_NDKTools_scanDir(env,jclass1, env->NewStringUTF(base), depth);
+
+                jstring childPath = env->NewStringUTF(base);
+                Java_com_example_jnicmake_NDKTools_scanDir(env, jclass1, childPath, depth);
             }
         }
     }
-
-
+    env->DeleteLocalRef(dir1);
     closedir(dir);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_jnicmake_NDKTools_getArray(
+        JNIEnv *env,
+        jclass jclass1
+) {
+
+
 }
