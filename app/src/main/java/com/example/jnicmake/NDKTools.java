@@ -8,6 +8,4 @@ public class NDKTools {
     }
 
     public static native void scanDir(String dir, int depth);
-
-    public static native void getArray();
 }
